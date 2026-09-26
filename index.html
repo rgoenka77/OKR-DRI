@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DRI — objectives, owned</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1B1F2A; --paper:#F6F4EE; --paper-2:#EDEADF; --line:#DAD5C4;
+  --gold:#B08D3F; --gold-soft:#F0E6CC;
+  --teal:#3E6E64; --teal-soft:#E1EBE7;
+  --rust:#A6483F; --rust-soft:#F5E4E1;
+  --muted:#6B6555;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#EDEADF; --paper:#15181F; --paper-2:#1D212B; --line:#2B303C;
+    --gold-soft:#3A331E; --teal-soft:#1B2A26; --rust-soft:#2C1B19; --muted:#9A947F;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#EDEADF; --paper:#15181F; --paper-2:#1D212B; --line:#2B303C;
+  --gold-soft:#3A331E; --teal-soft:#1B2A26; --rust-soft:#2C1B19; --muted:#9A947F;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:'Inter',sans-serif; font-size:15px; line-height:1.5;
+}
+h1,h2,h3,.serif{font-family:'Source Serif 4',serif;}
+.app{display:flex; min-height:100vh; max-width:1160px; margin:0 auto;}
+.rail{
+  width:280px; flex-shrink:0; border-right:1px solid var(--line);
+  padding:28px 20px; display:flex; flex-direction:column; gap:18px;
+}
+.brand{display:flex; align-items:baseline; gap:8px;}
+.brand h1{font-size:22px; font-weight:600; margin:0;}
+.brand span{font-size:12px; color:var(--muted);}
+.rail-sub{font-size:13px; color:var(--muted); margin:-8px 0 4px;}
+.obj-list{display:flex; flex-direction:column; gap:6px; overflow-y:auto;}
+.obj-item{
+  padding:11px 12px; border-radius:8px; cursor:pointer; border:1px solid transparent;
+  display:flex; flex-direction:column; gap:3px;
+}
+.obj-item:hover{background:var(--paper-2);}
+.obj-item.active{background:var(--paper-2); border-color:var(--line);}
+.obj-item .name{font-size:14px; font-weight:500;}
+.obj-item .meta{font-size:12px; color:var(--muted);}
+.dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px;}
+.dot.ok{background:var(--teal);} .dot.drift{background:var(--rust);} .dot.new{background:var(--muted);}
+.new-obj{
+  margin-top:auto; padding-top:14px; border-top:1px solid var(--line);
+  display:flex; flex-direction:column; gap:6px;
+}
+.new-obj input{
+  width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px;
+  background:var(--paper); color:var(--ink); font:inherit; font-size:13px;
+}
+.new-obj input.company-input{font-size:12px; color:var(--muted);}
+.new-obj button{
+  margin-top:2px; width:100%; padding:9px; border:none; border-radius:7px;
+  background:var(--ink); color:var(--paper); font:inherit; font-size:13px; font-weight:500; cursor:pointer;
+}
+.new-obj button:hover{opacity:.9;}
+.view-toggle{display:flex; gap:6px; margin-bottom:2px; flex-wrap:wrap;}
+.view-toggle button{
+  flex:1; min-width:72px; padding:7px; border-radius:7px; border:1px solid var(--line); background:transparent;
+  color:var(--muted); font:inherit; font-size:12.5px; cursor:pointer;
+}
+.view-toggle button.active{background:var(--paper-2); color:var(--ink); font-weight:500;}
+.obj-item .company-tag{font-size:11px; color:var(--gold); font-weight:500;}
+.main{flex:1; padding:32px 40px; overflow-x:auto;}
+.empty{max-width:420px; margin:80px auto; text-align:center;}
+.empty h2{font-size:24px; margin-bottom:10px;}
+.empty p{color:var(--muted); font-size:14px; margin-bottom:22px;}
+.obj-header{margin-bottom:26px;}
+.obj-header h2{font-size:26px; margin:0 0 6px; font-weight:600;}
+.obj-header .sub{color:var(--muted); font-size:14px;}
+.kr{
+  border:1px solid var(--line); border-radius:10px; margin-bottom:16px; overflow:hidden; background:var(--paper);
+}
+.kr-head{padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:12px;}
+.kr-head .kr-name{font-size:15px; font-weight:600;}
+.kr-head .kr-progress{font-size:12px; color:var(--muted);}
+.task-list{border-top:1px solid var(--line);}
+.task{
+  display:flex; align-items:center; gap:12px; padding:11px 18px;
+  border-bottom:1px solid var(--line);
+}
+.task:last-child{border-bottom:none;}
+.task-check{
+  width:18px; height:18px; border-radius:5px; border:1.5px solid var(--line); flex-shrink:0; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--paper);
+}
+.task-check.done{background:var(--teal); border-color:var(--teal);}
+.task-name{flex:1; font-size:14px;}
+.task-name.done{color:var(--muted); text-decoration:line-through;}
+.dri-badge{
+  font-size:11.5px; padding:3px 9px; border-radius:100px; background:var(--gold-soft); color:var(--gold);
+  font-weight:500; white-space:nowrap;
+}
+.flag{
+  font-size:11px; padding:3px 8px; border-radius:100px; background:var(--rust-soft); color:var(--rust); font-weight:500;
+}
+.add-task-row{display:flex; gap:8px; padding:12px 18px;}
+.add-task-row input{
+  flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:6px;
+  background:var(--paper); color:var(--ink); font:inherit; font-size:13px; min-width:0;
+}
+.add-task-row input.dri-input{flex:0 0 130px;}
+.add-task-row button{
+  padding:8px 14px; border:none; border-radius:6px; background:var(--paper-2); color:var(--ink);
+  font:inherit; font-size:13px; cursor:pointer; border:1px solid var(--line);
+}
+.add-kr{
+  display:flex; gap:8px; margin-top:4px;
+}
+.add-kr input{
+  flex:1; padding:11px 14px; border:1px dashed var(--line); border-radius:10px;
+  background:transparent; color:var(--ink); font:inherit; font-size:14px;
+}
+.add-kr button{
+  padding:11px 18px; border:none; border-radius:10px; background:var(--ink); color:var(--paper);
+  font:inherit; font-size:13px; font-weight:500; cursor:pointer;
+}
+.digest{
+  margin-top:30px; padding:16px 18px; border-radius:10px; background:var(--paper-2);
+  font-size:13px; color:var(--muted); line-height:1.6;
+}
+.digest strong{color:var(--ink); font-weight:600;}
+.suggest-row{margin:-14px 0 22px;}
+.suggest-btn{
+  padding:8px 14px; border:1px solid var(--gold); border-radius:8px; background:var(--gold-soft); color:var(--gold);
+  font:inherit; font-size:13px; font-weight:500; cursor:pointer;
+}
+.suggest-btn:hover{opacity:.85;}
+.suggest-btn:disabled{opacity:.5; cursor:default;}
+.suggest-panel{
+  margin-top:12px; border:1px dashed var(--gold); border-radius:10px; padding:14px 16px; background:var(--gold-soft);
+}
+.suggest-panel h3{font-size:14px; margin:0 0 10px; font-weight:600;}
+.suggest-kr{margin-bottom:10px;}
+.suggest-kr .name{font-size:13.5px; font-weight:600; margin-bottom:4px;}
+.suggest-kr .task-line{font-size:12.5px; color:var(--muted); padding-left:12px; margin-bottom:2px;}
+.suggest-actions{display:flex; gap:8px; margin-top:12px;}
+.suggest-actions button{
+  padding:8px 14px; border-radius:7px; border:none; font:inherit; font-size:12.5px; cursor:pointer;
+}
+.suggest-actions .accept{background:var(--ink); color:var(--paper);}
+.suggest-actions .dismiss{background:transparent; border:1px solid var(--line); color:var(--muted);}
+.portfolio-header{margin-bottom:22px;}
+.portfolio-header h2{font-size:26px; margin:0 0 6px; font-weight:600;}
+.portfolio-header .sub{color:var(--muted); font-size:14px;}
+.portfolio-table{border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+.portfolio-row{
+  display:grid; grid-template-columns:1.4fr .7fr .9fr 1.6fr; gap:14px; align-items:center;
+  padding:14px 18px; border-bottom:1px solid var(--line);
+}
+.portfolio-row:last-child{border-bottom:none;}
+.portfolio-row.head{background:var(--paper-2); font-size:11.5px; color:var(--muted); font-weight:500;}
+.portfolio-row .company-name{font-size:14.5px; font-weight:600; display:flex; align-items:center;}
+.stat-pill{
+  display:inline-flex; align-items:center; gap:6px; font-size:12.5px; padding:4px 10px; border-radius:100px; width:fit-content;
+}
+.stat-pill.ok{background:var(--teal-soft); color:var(--teal);}
+.stat-pill.drift{background:var(--rust-soft); color:var(--rust);}
+.stat-pill.new{background:var(--paper-2); color:var(--muted);}
+.portfolio-objs{font-size:12.5px; color:var(--muted); line-height:1.6;}
+.portfolio-empty{max-width:420px; margin:80px auto; text-align:center;}
+.portfolio-empty h2{font-size:22px; margin-bottom:10px;}
+.portfolio-empty p{color:var(--muted); font-size:14px;}
+
+.task{flex-wrap:wrap;}
+.task-main{display:flex; align-items:center; gap:12px; width:100%;}
+.task-why{
+  flex-basis:100%; font-size:12px; color:var(--muted); font-style:italic;
+  padding-left:30px; margin-top:2px;
+}
+.dri-badge{cursor:pointer; border:none;}
+.dri-badge:hover{opacity:.8;}
+.pulse{display:flex; gap:3px; flex-shrink:0;}
+.pulse button{
+  width:22px; height:22px; border-radius:50%; border:1px solid var(--line); background:var(--paper);
+  font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted);
+}
+.pulse button.clear.active{background:var(--teal-soft); border-color:var(--teal); color:var(--teal);}
+.pulse button.fuzzy.active{background:var(--rust-soft); border-color:var(--rust); color:var(--rust);}
+.add-task-row{flex-wrap:wrap;}
+.add-task-row .why-input{flex-basis:100%; order:3;}
+.why-error{flex-basis:100%; color:var(--rust); font-size:11.5px; padding:0 18px 8px; display:none;}
+.why-error.show{display:block;}
+.handoff-log{margin-top:14px; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--paper);}
+.handoff-log h4{font-size:12.5px; margin:0 0 8px; font-weight:600; color:var(--muted); text-transform:none;}
+.handoff-entry{font-size:12.5px; color:var(--muted); margin-bottom:6px; line-height:1.5;}
+.handoff-entry strong{color:var(--ink); font-weight:500;}
+.handoff-note{font-style:italic;}
+.clarity-flag{font-size:11px; padding:3px 8px; border-radius:100px; background:var(--rust-soft); color:var(--rust); font-weight:500;}
+.workload-header{margin-bottom:22px;}
+.workload-header h2{font-size:26px; margin:0 0 6px; font-weight:600;}
+.workload-header .sub{color:var(--muted); font-size:14px;}
+.workload-row{margin-bottom:16px;}
+.workload-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
+.workload-name{font-size:14.5px; font-weight:600;}
+.workload-count{font-size:12.5px; color:var(--muted);}
+.workload-bar-track{height:10px; border-radius:5px; background:var(--paper-2); overflow:hidden;}
+.workload-bar{height:100%; border-radius:5px; background:var(--teal);}
+.workload-bar.has-stalled{background:var(--rust);}
+.workload-objs{font-size:12px; color:var(--muted); margin-top:4px;}
+::-webkit-scrollbar{width:8px; height:8px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+@media (max-width: 720px){
+  .app{flex-direction:column;}
+  .rail{width:100%; border-right:none; border-bottom:1px solid var(--line);}
+  .main{padding:24px 20px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="rail">
+    <div class="brand"><h1>DRI</h1><span>objectives, owned</span></div>
+    <div class="view-toggle">
+      <button id="viewObjBtn" onclick="setView('obj')">Objectives</button>
+      <button id="viewPortBtn" onclick="setView('portfolio')">Portfolio</button>
+      <button id="viewWorkBtn" onclick="setView('workload')">Workload</button>
+    </div>
+    <div class="rail-sub" id="railSub">No objectives yet</div>
+    <div class="obj-list" id="objList"></div>
+    <div class="new-obj">
+      <input id="newObjInput" type="text" placeholder="New objective this quarter…" maxlength="80">
+      <input id="newCompanyInput" class="company-input" type="text" placeholder="Company (optional)" maxlength="40">
+      <button onclick="addObjective()">Add objective</button>
+    </div>
+  </div>
+  <div class="main" id="main"></div>
+</div>
+
+<script>
+const STALE_DAYS = 5;
+let state = load();
+let activeId = state.objectives[0]?.id || null;
+let viewMode = 'obj'; // 'obj' | 'portfolio'
+let suggestion = null; // pending AI-suggested breakdown, keyed to an objective id
+let sampleFn = null;
+if(window.claude && window.claude.use){
+  window.claude.use('sample').then(fn => { sampleFn = fn; render(); }).catch(()=>{});
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem('dri_state_v1');
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return { objectives: [] };
+}
+function save(){
+  try{ localStorage.setItem('dri_state_v1', JSON.stringify(state)); }catch(e){}
+}
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function daysSince(ts){ return (Date.now()-ts)/86400000; }
+
+function addObjective(){
+  const input = document.getElementById('newObjInput');
+  const companyInput = document.getElementById('newCompanyInput');
+  const name = input.value.trim();
+  if(!name) return;
+  const company = companyInput.value.trim() || 'My company';
+  const obj = { id: uid(), name, company, createdAt: Date.now(), keyResults: [] };
+  state.objectives.push(obj);
+  activeId = obj.id;
+  viewMode = 'obj';
+  input.value = ''; companyInput.value = '';
+  save(); render();
+}
+
+function setView(mode){ viewMode = mode; suggestion = null; render(); }
+
+function addKR(objId){
+  const input = document.getElementById('newKRInput');
+  const name = input.value.trim();
+  if(!name) return;
+  const obj = state.objectives.find(o=>o.id===objId);
+  obj.keyResults.push({ id: uid(), name, tasks: [] });
+  save(); render();
+}
+
+function addTask(objId, krId){
+  const nameInput = document.getElementById('task-name-'+krId);
+  const driInput = document.getElementById('task-dri-'+krId);
+  const whyInput = document.getElementById('task-why-'+krId);
+  const errEl = document.getElementById('task-why-err-'+krId);
+  const name = nameInput.value.trim();
+  const dri = driInput.value.trim() || 'Unassigned';
+  const why = whyInput.value.trim();
+  if(!name) return;
+  if(!why){
+    if(errEl) errEl.classList.add('show');
+    return;
+  }
+  if(errEl) errEl.classList.remove('show');
+  const obj = state.objectives.find(o=>o.id===objId);
+  const kr = obj.keyResults.find(k=>k.id===krId);
+  kr.tasks.push({ id: uid(), name, dri, why, done:false, clarity:null, updatedAt: Date.now() });
+  save(); render();
+}
+
+function setClarity(objId, krId, taskId, value){
+  const obj = state.objectives.find(o=>o.id===objId);
+  const kr = obj.keyResults.find(k=>k.id===krId);
+  const task = kr.tasks.find(t=>t.id===taskId);
+  task.clarity = task.clarity===value ? null : value;
+  save(); render();
+}
+
+function reassignDRI(objId, krId, taskId){
+  const obj = state.objectives.find(o=>o.id===objId);
+  const kr = obj.keyResults.find(k=>k.id===krId);
+  const task = kr.tasks.find(t=>t.id===taskId);
+  const newOwner = prompt('Reassign "'+task.name+'" to:', task.dri==='Unassigned' ? '' : task.dri);
+  if(newOwner===null) return;
+  const trimmed = newOwner.trim();
+  if(!trimmed || trimmed===task.dri) return;
+  let note = '';
+  if(task.dri && task.dri!=='Unassigned'){
+    note = prompt('Quick handoff note for '+trimmed+' — what\'s done, what\'s left, any blockers:', '') || '';
+  }
+  obj.handoffLog = obj.handoffLog || [];
+  obj.handoffLog.unshift({ id: uid(), taskName: task.name, from: task.dri, to: trimmed, note, at: Date.now() });
+  task.dri = trimmed;
+  task.clarity = null;
+  task.updatedAt = Date.now();
+  save(); render();
+}
+
+function toggleTask(objId, krId, taskId){
+  const obj = state.objectives.find(o=>o.id===objId);
+  const kr = obj.keyResults.find(k=>k.id===krId);
+  const task = kr.tasks.find(t=>t.id===taskId);
+  task.done = !task.done;
+  task.updatedAt = Date.now();
+  save(); render();
+}
+
+function objStatus(obj){
+  let hasTask=false, drift=false;
+  obj.keyResults.forEach(kr=>kr.tasks.forEach(t=>{
+    hasTask=true;
+    if(!t.done && daysSince(t.updatedAt) > STALE_DAYS) drift=true;
+  }));
+  if(!hasTask) return 'new';
+  return drift ? 'drift' : 'ok';
+}
+
+function krProgress(kr){
+  if(kr.tasks.length===0) return '0/0';
+  const done = kr.tasks.filter(t=>t.done).length;
+  return done+'/'+kr.tasks.length;
+}
+
+function renderRail(){
+  const list = document.getElementById('objList');
+  const sub = document.getElementById('railSub');
+  sub.textContent = state.objectives.length
+    ? state.objectives.length + ' objective' + (state.objectives.length>1?'s':'') + ' this quarter'
+    : 'No objectives yet';
+  list.innerHTML = state.objectives.map(o=>{
+    const status = objStatus(o);
+    const totalTasks = o.keyResults.reduce((a,k)=>a+k.tasks.length,0);
+    const doneTasks = o.keyResults.reduce((a,k)=>a+k.tasks.filter(t=>t.done).length,0);
+    return `<div class="obj-item ${viewMode==='obj' && o.id===activeId?'active':''}" onclick="selectObj('${o.id}')">
+      <div class="name"><span class="dot ${status}"></span>${escapeHtml(o.name)}</div>
+      <div class="company-tag">${escapeHtml(o.company || 'My company')}</div>
+      <div class="meta">${totalTasks ? doneTasks+'/'+totalTasks+' tasks done' : 'no key results yet'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('viewObjBtn').classList.toggle('active', viewMode==='obj');
+  document.getElementById('viewPortBtn').classList.toggle('active', viewMode==='portfolio');
+  document.getElementById('viewWorkBtn').classList.toggle('active', viewMode==='workload');
+}
+
+function selectObj(id){ activeId = id; viewMode = 'obj'; suggestion = null; render(); }
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function buildDigest(obj){
+  const owners = {};
+  let doneCount=0, totalCount=0, driftCount=0, fuzzyCount=0;
+  obj.keyResults.forEach(kr=>kr.tasks.forEach(t=>{
+    totalCount++;
+    if(t.done) doneCount++;
+    else if(daysSince(t.updatedAt)>STALE_DAYS) driftCount++;
+    if(!t.done && t.clarity==='fuzzy') fuzzyCount++;
+    owners[t.dri] = (owners[t.dri]||0) + (t.done?0:1);
+  }));
+  if(totalCount===0) return 'Add a key result and a task to start tracking ownership on this objective.';
+  const ownerList = Object.entries(owners).filter(([,n])=>n>0).map(([n])=>n);
+  let text = `<strong>${doneCount}/${totalCount}</strong> tasks complete across ${obj.keyResults.length} key result${obj.keyResults.length===1?'':'s'}.`;
+  if(driftCount>0) text += ` <strong>${driftCount}</strong> task${driftCount===1?' hasn\'t':'s haven\'t'} moved in over ${STALE_DAYS} days — worth checking in with the owner.`;
+  else if(totalCount>doneCount) text += ` Everything open is still fresh — no stalled owners right now.`;
+  if(ownerList.length) text += ` Open work is spread across <strong>${ownerList.length}</strong> owner${ownerList.length===1?'':'s'}.`;
+  if(fuzzyCount>0) text += ` <strong>${fuzzyCount}</strong> owner${fuzzyCount===1?' has':'s have'} marked their task unclear — that's a conversation, not a deadline problem.`;
+  return text;
+}
+
+async function suggestBreakdown(objId){
+  if(!sampleFn) return;
+  const obj = state.objectives.find(o=>o.id===objId);
+  const btn = document.getElementById('suggestBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Thinking…'; }
+  const existing = obj.keyResults.map(k=>k.name).join('; ') || 'none yet';
+  const prompt = `You help early-stage founders break a quarterly objective into key results and delegable tasks, following the OKR plus DRI (directly responsible individual) model.
+
+Objective: "${obj.name}"
+Existing key results: ${existing}
+
+Propose 2 to 3 NEW key results (do not repeat the existing ones) that would move this objective forward, each with 2 to 4 concrete, delegable tasks. For each task, suggest a plausible role as the owner (e.g. "Eng lead", "Head of Sales") rather than a person's name, and a one-sentence "why" explaining why that task matters to the objective.
+
+Respond with ONLY valid JSON, no markdown fences, no commentary, in exactly this shape:
+{"keyResults":[{"name":"...","tasks":[{"name":"...","owner":"...","why":"..."}]}]}`;
+  try{
+    const result = await sampleFn.json(prompt, { modelTier: 'default' });
+    suggestion = { objId, keyResults: (result && result.keyResults) || [] };
+  }catch(e){
+    suggestion = null;
+    alert('Could not generate a suggestion right now — try again in a moment.');
+  }
+  render();
+}
+
+function acceptSuggestion(){
+  if(!suggestion) return;
+  const obj = state.objectives.find(o=>o.id===suggestion.objId);
+  suggestion.keyResults.forEach(kr=>{
+    if(!kr.name) return;
+    const tasks = (kr.tasks||[]).filter(t=>t.name).map(t=>(
+      { id: uid(), name: t.name, dri: t.owner || 'Unassigned', why: t.why || '', done:false, clarity:null, updatedAt: Date.now() }
+    ));
+    obj.keyResults.push({ id: uid(), name: kr.name, tasks });
+  });
+  suggestion = null;
+  save(); render();
+}
+
+function dismissSuggestion(){ suggestion = null; render(); }
+
+function renderPortfolio(){
+  const main = document.getElementById('main');
+  if(state.objectives.length===0){
+    main.innerHTML = `<div class="portfolio-empty">
+      <h2 class="serif">No portfolio data yet</h2>
+      <p>Tag objectives with a company as you add them, and this view rolls up ownership health across every company at a glance — the way an investor checks in without sitting in every meeting.</p>
+    </div>`;
+    return;
+  }
+  const companies = {};
+  state.objectives.forEach(o=>{
+    const c = o.company || 'My company';
+    (companies[c] = companies[c] || []).push(o);
+  });
+  const rows = Object.entries(companies).map(([company, objs])=>{
+    let done=0, total=0, driftObjs=0;
+    objs.forEach(o=>{
+      if(objStatus(o)==='drift') driftObjs++;
+      o.keyResults.forEach(kr=>kr.tasks.forEach(t=>{ total++; if(t.done) done++; }));
+    });
+    const pct = total ? Math.round(100*done/total) : 0;
+    const overallStatus = driftObjs>0 ? 'drift' : (total ? 'ok' : 'new');
+    const statusLabel = overallStatus==='drift' ? driftObjs+' objective'+(driftObjs===1?'':'s')+' drifting'
+      : overallStatus==='ok' ? 'on track' : 'no data yet';
+    return `<div class="portfolio-row">
+      <div class="company-name">${escapeHtml(company)}</div>
+      <div class="stat-pill ${overallStatus}">${statusLabel}</div>
+      <div>${pct}% of tasks done</div>
+      <div class="portfolio-objs">${objs.map(o=>escapeHtml(o.name)).join(', ')}</div>
+    </div>`;
+  }).join('');
+  main.innerHTML = `
+    <div class="portfolio-header">
+      <h2>Portfolio</h2>
+      <div class="sub">Ownership health across every company you're tracking, at a glance.</div>
+    </div>
+    <div class="portfolio-table">
+      <div class="portfolio-row head"><div>Company</div><div>Status</div><div>Progress</div><div>Objectives</div></div>
+      ${rows}
+    </div>
+  `;
+}
+
+function renderWorkload(){
+  const main = document.getElementById('main');
+  const owners = {};
+  state.objectives.forEach(o=>{
+    o.keyResults.forEach(kr=>kr.tasks.forEach(t=>{
+      if(t.done) return;
+      const key = t.dri || 'Unassigned';
+      if(!owners[key]) owners[key] = { open:0, stalled:0, objs:new Set() };
+      owners[key].open++;
+      if(daysSince(t.updatedAt)>STALE_DAYS) owners[key].stalled++;
+      owners[key].objs.add(o.name);
+    }));
+  });
+  const entries = Object.entries(owners).sort((a,b)=>b[1].open-a[1].open);
+  if(entries.length===0){
+    main.innerHTML = `<div class="portfolio-empty">
+      <h2 class="serif">Nothing to balance yet</h2>
+      <p>Once tasks are delegated, this view shows how open work is spread across owners — so you can catch overload before it becomes a bottleneck, across every objective and company at once.</p>
+    </div>`;
+    return;
+  }
+  const max = Math.max(...entries.map(([,v])=>v.open));
+  const rows = entries.map(([name, v])=>{
+    const pct = Math.round(100*v.open/max);
+    return `<div class="workload-row">
+      <div class="workload-top">
+        <div class="workload-name">${escapeHtml(name)}</div>
+        <div class="workload-count">${v.open} open${v.stalled?', '+v.stalled+' stalled':''}</div>
+      </div>
+      <div class="workload-bar-track"><div class="workload-bar ${v.stalled?'has-stalled':''}" style="width:${pct}%"></div></div>
+      <div class="workload-objs">${Array.from(v.objs).map(escapeHtml).join(', ')}</div>
+    </div>`;
+  }).join('');
+  main.innerHTML = `
+    <div class="workload-header">
+      <h2>Workload</h2>
+      <div class="sub">Every owner's open work, across all objectives and companies — the cross-team view no single objective shows you.</div>
+    </div>
+    ${rows}
+  `;
+}
+
+function render(){
+  renderRail();
+  const main = document.getElementById('main');
+  if(viewMode==='portfolio'){ renderPortfolio(); return; }
+  if(viewMode==='workload'){ renderWorkload(); return; }
+  const obj = state.objectives.find(o=>o.id===activeId);
+  if(!obj){
+    main.innerHTML = `<div class="empty">
+      <h2 class="serif">Name what you're building toward</h2>
+      <p>Jay Zaveri's playbook: every objective needs key results, and every task under them needs one directly responsible individual. Add your first objective on the left to start.</p>
+    </div>`;
+    return;
+  }
+  const suggestionHtml = suggestion && suggestion.objId===obj.id ? `
+    <div class="suggest-panel">
+      <h3>Suggested breakdown</h3>
+      ${suggestion.keyResults.map(kr => `
+        <div class="suggest-kr">
+          <div class="name">${escapeHtml(kr.name||'')}</div>
+          ${(kr.tasks||[]).map(t=>`<div class="task-line">${escapeHtml(t.name||'')} — ${escapeHtml(t.owner||'Unassigned')}</div>`).join('')}
+        </div>
+      `).join('')}
+      <div class="suggest-actions">
+        <button class="accept" onclick="acceptSuggestion()">Add these to the objective</button>
+        <button class="dismiss" onclick="dismissSuggestion()">Dismiss</button>
+      </div>
+    </div>
+  ` : '';
+  main.innerHTML = `
+    <div class="obj-header">
+      <h2>${escapeHtml(obj.name)}</h2>
+      <div class="sub">Break this into key results, then delegate tasks to a named DRI.</div>
+    </div>
+    ${sampleFn ? `<div class="suggest-row">
+      <button id="suggestBtn" class="suggest-btn" onclick="suggestBreakdown('${obj.id}')">Suggest key results &amp; tasks</button>
+      ${suggestionHtml}
+    </div>` : ''}
+    ${obj.keyResults.map(kr => `
+      <div class="kr">
+        <div class="kr-head">
+          <div class="kr-name">${escapeHtml(kr.name)}</div>
+          <div class="kr-progress">${krProgress(kr)} tasks</div>
+        </div>
+        <div class="task-list">
+          ${kr.tasks.map(t => {
+            const stale = !t.done && daysSince(t.updatedAt) > STALE_DAYS;
+            return `<div class="task">
+              <div class="task-main">
+                <div class="task-check ${t.done?'done':''}" onclick="toggleTask('${obj.id}','${kr.id}','${t.id}')">${t.done?'✓':''}</div>
+                <div class="task-name ${t.done?'done':''}">${escapeHtml(t.name)}</div>
+                ${stale ? `<div class="flag">stalled</div>` : ''}
+                ${!t.done ? `<div class="pulse" title="Owner's self-reported understanding">
+                  <button class="clear ${t.clarity==='clear'?'active':''}" onclick="setClarity('${obj.id}','${kr.id}','${t.id}','clear')" title="Clear">✓</button>
+                  <button class="fuzzy ${t.clarity==='fuzzy'?'active':''}" onclick="setClarity('${obj.id}','${kr.id}','${t.id}','fuzzy')" title="Fuzzy">?</button>
+                </div>` : ''}
+                <button class="dri-badge" onclick="reassignDRI('${obj.id}','${kr.id}','${t.id}')" title="Click to reassign">${escapeHtml(t.dri)}</button>
+              </div>
+              ${t.why ? `<div class="task-why">Why: ${escapeHtml(t.why)}</div>` : ''}
+            </div>`;
+          }).join('')}
+          <div class="add-task-row">
+            <input id="task-name-${kr.id}" type="text" placeholder="New task…" maxlength="80" onkeydown="if(event.key==='Enter')document.getElementById('task-why-${kr.id}').focus()">
+            <input id="task-dri-${kr.id}" class="dri-input" type="text" placeholder="Owner (DRI)" maxlength="30" onkeydown="if(event.key==='Enter')document.getElementById('task-why-${kr.id}').focus()">
+            <button onclick="addTask('${obj.id}','${kr.id}')">Add</button>
+            <input id="task-why-${kr.id}" class="why-input" type="text" placeholder="Why this matters — required, this is the whole point" maxlength="140" onkeydown="if(event.key==='Enter')addTask('${obj.id}','${kr.id}')">
+            <div id="task-why-err-${kr.id}" class="why-error">Every task needs its why — that's what keeps ownership from turning into busywork.</div>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+    ${obj.handoffLog && obj.handoffLog.length ? `
+      <div class="handoff-log">
+        <h4>Handoff log</h4>
+        ${obj.handoffLog.slice(0,6).map(h => `<div class="handoff-entry">
+          <strong>${escapeHtml(h.taskName)}</strong> moved from ${escapeHtml(h.from)} to ${escapeHtml(h.to)}${h.note ? ` — <span class="handoff-note">${escapeHtml(h.note)}</span>` : ''}
+        </div>`).join('')}
+      </div>
+    ` : ''}
+    <div class="add-kr">
+      <input id="newKRInput" type="text" placeholder="New key result for this objective…" maxlength="90" onkeydown="if(event.key==='Enter')addKR('${obj.id}')">
+      <button onclick="addKR('${obj.id}')">Add key result</button>
+    </div>
+    <div class="digest">${buildDigest(obj)}</div>
+  `;
+}
+
+document.getElementById('newObjInput').addEventListener('keydown', e => { if(e.key==='Enter') addObjective(); });
+
+render();
+</script>
+</body>
+</html>
